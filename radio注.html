@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>radio</title>
+    <style>
+        /* 加粗文本样式 */
+        .bolder{
+            font-weight: bolder;
+        }
+		/* 控制区域样式 - 居中对齐 */
+		#ctrl{
+			text-align: center;
+		}
+		/* 控制区域内span元素间距 */
+		#ctrl span{
+			margin-right: 30px;
+		}
+		/* 当前播放信息区域样式 - 固定宽高、边框、flex布局 */
+		#now{
+			width: 900px;
+			height: 70px; 
+			border: 1px solid gray;
+			border-radius: 10px;
+			margin: 0 auto;
+			display: flex; /* 使用 flex 布局 */
+			align-items: center; /* 垂直居中 */
+			padding: 0 10px; /* 左右内边距 */
+		}
+		/* 节目图片区域样式 */
+		#now #image-area {
+			width: 50px;
+			height: 50px;
+			margin-right: 10px; /* 与中间区域的间隔 */
+		}
+		/* 节目图片样式 - 覆盖显示 */
+		#now #image-area img {
+			width: 100%;
+			height: 100%;
+			object-fit: cover;
+		}
+		/* 文本信息区域样式 - flex布局占满剩余空间 */
+		#now #text-area {
+			flex: 1; /* 占据剩余空间 */
+			height: 50px;
+			display: flex;
+			justify-content: space-between;
+		}
+		/* 文本组样式 - 垂直排列 */
+		#now #text-area .text-group {
+			display: flex;
+			flex-direction: column;
+			justify-content: space-between;
+		}
+		/* 文本组内span元素字体大小 */
+		#now #text-area .text-group span {
+			font-size: 14px;
+		}
+		/* 音频播放区域样式 */
+		#now #audio-area {
+			margin-left: 20px; /* 与中间区域的间隔 */
+		}
+		
+		/* 节目列表无序列表样式 */
+		#pList{
+			list-style: none;
+		}
+		/* 节目列表项样式 */
+		#pList li{
+			border: 1px solid black;
+			border-radius: 10px;
+			padding: 10px;
+			text-align: center;
+			margin: 30px 0px;
+		}
+		/* 节目列表项内span元素间距 */
+		#pList li span{
+			margin: 0px 50px;
+		}
+		/* 字段集内表格样式 */
+		fieldset table{
+			margin: 5px auto;
+		}
+		/* 字段集内单元格内边距 */
+		fieldset td{
+			padding: 3px;
+		}
+		
+		/* 标签按钮区域样式 - 居中对齐 */
+		#tab_btn{
+			text-align: center;
+		}
+		/* 标签按钮样式 */
+		#tab_btn button{
+			background: none;
+			border: none;
+			font-size: 24px;
+			margin: 0px 100px;
+		}
+		/* 默认隐藏第二个字段集（节目单） */
+		fieldset:nth-of-type(2){
+			display: none;
+		}
+		/* 第一个标签按钮下划线样式（默认选中状态） */
+		#tab_btn button:nth-of-type(1){
+			border-bottom: 3px gray solid;
+		}
+    </style>
+</head>
+<body>
+	<!-- 控制区域：包含频率选择、ID显示和功能按钮 -->
+	<div id="ctrl">
+		<p>
+			<span>
+			FM频率：
+				<select>
+					<option value =""><b>请选择</b></option>
+					<option value="20194">88.0</option>
+					<option value="1254">91.4</option>
+					<option value="468">93.6</option>
+					<option value="4847">95.3</option>
+					<option value="4848">96.2</option>
+					<option value="1259">97.4</option>
+					<option value="1260">99.3</option>
+					<option value="20192">102.7</option>
+					<option value="469">103.6</option>
+					<option value="1262">105.2</option>
+					<option value="470">105.7</option>
+					<option value="4955">106.1</option>
+					<option value="471">107.7</option>
+				</select>
+			</span>
+			<span>
+				id：
+				<input type="text" id="id" readonly="readonly" placeholder="仅显示" style="width: 100px;" />
+			</span>
+			<span>
+				<button type="button" class="ctrl_btn">重新加载数据</button>
+			</span>	
+			<span>
+				<button type="button" class="ctrl_btn">查看json</button>
+			</span>
+			<span>	
+				<button type="button" class="ctrl_btn" onclick="play()">重新加载音频</button>
+			</span>
+		</p>	
+	</div>
+	
+	<!-- 当前播放信息区域：包含节目图片、文本信息和音频播放器 -->
+	<div id="now">
+		<div id="image-area">
+			<img src="" alt="icon">
+		</div>
+		<div id="text-area">
+			<div class="text-group">
+				<span></span>
+				<span></span>
+			</div>
+			<div class="text-group">
+				<span></span>
+				<span></span>
+			</div>
+			<div class="text-group">
+				<span></span>
+			</div>
+		</div>
+		<div id="audio-area">
+			<audio src="" controls="controls" autoplay="autoplay">
+				当前浏览器不支持 audio 标签。
+			</audio>
+		</div>
+	</div>
+	
+	<!-- 标签切换按钮：用于切换"频道信息"和"节目单"标签页 -->
+	<div id="tab_btn">
+		<button onclick="tab(this)">频道信息</button>
+		<button onclick="tab(this)">节目单</button>
+	</div>
+	
+    <!-- 频道信息字段集 -->
+    <fieldset>
+        <legend>频道信息</legend>
+        <ul id="album"></ul>
+    </fieldset>
+	
+	<!-- 节目单字段集 -->
+	<fieldset>
+		<legend>节目单</legend>
+		<!-- 节目单内容将通过JavaScript动态生成 -->
+	</fieldset>
+</body>
+
+<script type="text/javascript">
+	// 全局变量定义
+	var id ='4955'                  // 默认电台ID
+    var json_data                   // 存储从API获取的JSON数据
+	var url = "https://webapi.qtfm.cn/api/pc/radio/"  // API基础URL
+	var ctrl_btn =document.getElementsByClassName('ctrl_btn')  // 控制按钮集合
+	var Mz = document.getElementsByTagName('select')[0]  // 频率选择下拉框
+	var show_id = document.getElementById('id')  // ID显示输入框
+	var now = document.getElementById('now')  // 当前播放信息区域元素
+	var now_area = [now.getElementsByTagName('img')[0],now.getElementsByTagName('span'),now.getElementsByTagName('audio')[0]]  // 当前播放区域元素集合：[图片, 文本span, 音频元素]
+	
+	var ul_album = document.getElementById('album');  // 频道信息列表容器
+	
+	var ul_pList = document.getElementById('pList');  // 节目单列表容器（当前未使用）
+	var res_btn =document.getElementsByClassName('ret')  // 回放按钮集合
+</script>
+
+<script type="text/javascript">
+	// 标签切换相关变量
+	let tab_btn = document.getElementById('tab_btn').getElementsByTagName('button')  // 标签按钮集合
+	let fieldset=document.getElementsByTagName('fieldset')  // 字段集集合（频道信息和节目单）
+	let now_page = fieldset[0]  // 当前活动标签页
+	
+	/**
+	 * 标签切换函数
+	 * @param {HTMLElement} t - 点击的标签按钮元素
+	 */
+	function tab(t){
+		if(t.innerHTML == '频道信息'){
+			fieldset[0].style.display='block'  // 显示频道信息
+			fieldset[1].style.display='none'   // 隐藏节目单
+			tab_btn[1].style.border='none'     // 移除节目单按钮下划线
+			tab_btn[0].style.borderBottom='3px grey solid'  // 添加频道信息按钮下划线
+		}else if(t.innerHTML == '节目单'){
+			fieldset[0].style.display='none'   // 隐藏频道信息
+			fieldset[1].style.display='block'  // 显示节目单
+			tab_btn[0].style.border='none'     // 移除频道信息按钮下划线
+			tab_btn[1].style.borderBottom='3px grey solid'  // 添加节目单按钮下划线
+		}
+	}
+</script>
+
+<script type="text/javascript">
+	// 为"重新加载数据"按钮添加点击事件
+	ctrl_btn[0].addEventListener('click',function(){
+		get(url+id)  // 请求最新数据
+	})
+	
+	// 为频率选择下拉框添加change事件
+	Mz.addEventListener('change',function(){
+		id = Mz.value  // 更新选中的电台ID
+	})
+	
+	// 为"查看json"按钮添加点击事件
+	ctrl_btn[1].addEventListener('click',function(){
+		window.open(`https://webapi.qtfm.cn/api/pc/radio/${id}`,'_blank')  // 在新窗口打开API数据
+	})
+	
+	/**
+	 * 发起GET请求获取数据
+	 * @param {string} url - 请求URL
+	 */
+	function get(url) {
+	    var xhr = new XMLHttpRequest();
+	    xhr.open('GET', url, true);
+	    xhr.onreadystatechange = function() {
+	        if (xhr.readyState === 4 && xhr.status === 200) {  // 请求成功
+	            try {
+	                json_data = JSON.parse(xhr.responseText);  // 解析JSON数据
+	                album(json_data.album);  // 渲染频道信息
+					pList(json_data.pList);  // 渲染节目单
+	            } catch (error) {
+	                console.error('JSON parsing error:', error);  // JSON解析错误处理
+	            }
+	        } else if (xhr.readyState === 4) {  // 请求完成但失败
+	            console.error('Request failed with status:', xhr.status);
+	        }
+	    };
+	    xhr.send();
+	}
+	
+	/**
+	 * 重新加载并播放音频
+	 */
+	function play(){
+		now_area[2].src=`https://lhttp.qingting.fm/live/${id}/64k.mp3`  // 设置音频源为直播流
+		now_area[2].play()  // 播放音频
+	}
+	
+	/**
+	 * 回放节目
+	 * @param {HTMLElement} t - 点击的回放按钮元素
+	 */
+	function replay(t){
+		now_area[2].src=t.dataset.url  // 设置音频源为回放地址
+		now_area[2].play()  // 播放音频
+	}
+</script>
+
+<script>
+    /**
+     * 渲染频道信息
+     * @param {Object} data - 频道信息数据
+     */
+	function album(data) {
+	    if (json_data && data) {  // 检查数据是否存在
+			// 提取当前播放节目信息
+			const now_data = {
+				img:json_data.album.cover,
+				id:json_data.album.nowplaying.id,
+				duration:json_data.album.nowplaying.duration,
+				start:json_data.album.nowplaying.start_time,
+				end:json_data.album.nowplaying.end_time,
+				name:json_data.album.nowplaying.name,
+				title:json_data.album.nowplaying.title,
+				p_rid:json_data.album.nowplaying.playbill_rid,
+				p_id:json_data.album.nowplaying.playbill_id,
+				broadcasters:json_data.album.nowplaying.broadcasters
+			}
+			
+			// 更新当前播放区域显示
+			now_area[0].src = now_data.img  // 设置节目图片
+			now_area[1][0].innerHTML = '<b>节目名：</b>'+now_data.name+'（'+now_data.title+')'  // 节目名和标题
+			now_area[1][1].innerHTML = "<b>时段：</b>"+now_data.start+"~"+now_data.end  // 播放时段
+			now_area[1][3].innerHTML = "<b>时长：</b>"+now_data.duration  // 节目时长
+			now_area[1][2].innerHTML = "<b>id：</b>"+now_data.id  // 节目ID
+			
+			// 构建主持人信息HTML
+			let broadcasters_str = ""
+			for(let i=0;i<Object.values(now_data.broadcasters).length;i++){
+				const broadcasters = now_data.broadcasters[i]
+					broadcasters_str += `<details><summary>${broadcasters.username}</summary><b>id：</b><span>${broadcasters.id}</span><br>`
+				if(broadcasters.weibo_name != undefined){
+					broadcasters_str += `<b>weibo_name：</b><a href="https://s.weibo.com/weibo?q=${broadcasters.weibo_name}" target="_blank">${broadcasters.weibo_name}</a><br>`
+				}
+				if(broadcasters.weibo_id != undefined){
+					broadcasters_str += `<b>weibo_id：</b><a href="https://weibo.com/u/${broadcasters.weibo_id}" target="_blank">${broadcasters.weibo_id}</a><br>`
+				}
+				broadcasters_str += "</details>"
+			}
+			now_area[1][4].innerHTML = broadcasters_str  // 显示主持人信息
+			
+			// 构建频道信息列表
+			let li_str = ""
+	        for(let i=0;i<Object.values(data).length;i++){
+				li_str+=`<li><p>${Object.keys(data)[i]}：<span class='bolder'>${Object.values(data)[i]}</span></p></li>`
+			}
+			ul_album.innerHTML = li_str  // 更新频道信息列表
+			show_id.value = id  // 显示当前电台ID
+	    }
+	}
+</script>
+
+<script type="text/javascript">
+	/**
+	 * 将星期数字转换为中文（1-7 -> 日-六）
+	 * @param {number} num - 星期数字（1-7）
+	 * @returns {string} 中文星期
+	 */
+	function format_week(num){
+		const str=['日','一','二','三','四','五','六']
+		return str[num-1]
+	}
+	
+	/**
+	 * 格式化时间字符串（去除冒号）
+	 * @param {string} val - 时间字符串（如"12:30:00"）
+	 * @returns {string} 格式化后的时间（如"123000"）
+	 */
+	function format_time(val){
+		let str=val.split(":")
+		let res=""
+		for(var i=0;i<str.length;i++){
+			res+=str[i]
+		}
+		return res
+	}
+	
+	/**
+	 * 根据星期汉字获取最近的日期（YYYYMMDD格式）
+	 * @param {string} val - 星期汉字（如"一"表示星期一）
+	 * @returns {string} 日期字符串（YYYYMMDD）
+	 */
+	function get_date(val){
+		// 星期汉字到数字的映射（0=星期日，1=星期一...6=星期六）
+		const weekMap = {
+			'日': 0,
+			'一': 1,
+			'二': 2,
+			'三': 3,
+			'四': 4,
+			'五': 5,
+			'六': 6
+		};
+		
+		const targetDay = weekMap[val];
+		if (targetDay === undefined) {
+			return "无效的星期值";
+		}
+		
+		const today = new Date();
+		const currentDay = today.getDay();
+		
+		// 计算与目标星期几的差距，确保获取最近的日期
+		let diff = targetDay - currentDay;
+		if (diff > 3) {
+			diff -= 7;
+		} else if (diff < -3) {
+			diff += 7;
+		}
+		
+		const targetDate = new Date(today);
+		targetDate.setDate(today.getDate() + diff);
+		
+		// 格式化日期为YYYYMMDD
+		const year = targetDate.getFullYear();
+		const month = String(targetDate.getMonth() + 1).padStart(2, '0');
+		const day = String(targetDate.getDate()).padStart(2, '0');
+		
+		return `${year}${month}${day}`;
+	}
+
+	function now_date(){
+		const date = new Date()
+			  year = String(date.getFullYear())
+			  month = String((date.getMonth()+1)).padStart(2,'0')
+			  day = String(date.getDate()).padStart(2,'0')
+			  hour = String(date.getHours()).padStart(2,'0')
+			  minut = String(date.getMinutes()).padStart(2,'0')
+
+		return [year+month+day,hour+minut]
+	}
+
+	/**
+	 * 渲染节目单
+	 * @param {Object} data - 节目单数据
+	 */
+	function pList(data){
+		let pList_str = ""
+		if (json_data && data){
+			// 遍历节目单数据
+			for(let i=0;i<Object.values(data).length;i++){  // 遍历节目单分组
+				pList_str += '<table border="3">'  // 创建表格
+				for(let j=0;j<Object.values(Object.values(data)[i]).length;j++){  // 遍历分组内节目
+					pList_str += `<tr>`  // 创建表格行
+					
+					// 节目名
+					pList_str += `<td><b>节目名：</b>${Object.values(Object.values(data)[i])[j].title}</td>`
+					// 播放时段
+					pList_str += `<td><b>时段：</b>${Object.values(Object.values(data)[i])[j].start_time}~${Object.values(Object.values(data)[i])[j].end_time}</td>`
+					// 节目时长
+					pList_str += `<td><b>时长：</b>${Object.values(Object.values(data)[i])[j].duration}</td>`
+
+					// 主持人信息
+					pList_str += '<td>'
+					for(let k=0;k<Object.values(Object.values(data)[i])[j].broadcasters.length;k++){
+						const broadcasters = Object.values(Object.values(data)[i])[j].broadcasters[k]
+							pList_str += `<details><summary>${broadcasters.username}</summary><b>id：</b><span>${broadcasters.id}</span><br>`
+						if(broadcasters.weibo_name != undefined){
+							pList_str += `<b>weibo_name：</b><a href="https://s.weibo.com/weibo?q=${broadcasters.weibo_name}" target="_blank">${broadcasters.weibo_name}</a><br>`
+						}
+						if(broadcasters.weibo_id != undefined){
+							pList_str += `<b>weibo_id：</b><a href="https://weibo.com/u/${broadcasters.weibo_id}" target="_blank">${broadcasters.weibo_id}</a><br>`
+						}
+						pList_str += "</details>"
+					}
+					pList_str += '</td>'
+
+					// 日期
+					pList_str += `<td><b>${get_date(format_week(Object.values(Object.values(data)[i])[j].day))}</b></td>`
+
+					// 回放按钮
+					const res_data = `https://lcache.qtfm.cn/cache/${get_date(format_week(Object.values(Object.values(data)[i])[j].day))}/${Object.values(Object.values(data)[i])[j].channel_id}/${Object.values(Object.values(data)[i])[j].channel_id}_${get_date(format_week(Object.values(Object.values(data)[i])[j].day))}_${format_time(Object.values(Object.values(data)[i])[j].start_time)}_${format_time(Object.values(Object.values(data)[i])[j].end_time)}_24_0.aac`
+
+					if(get_date(format_week(Object.values(Object.values(data)[i])[j].day))>now_date()[0]){//日期：20260520《20260521时间：170000《184347
+						pList_str += `<td><button type="button" class="ret" data-url="${res_data}" onclick='replay(this)' disabled='disabled'>回放</button></td>`
+					}
+					else if(get_date(format_week(Object.values(Object.values(data)[i])[j].day))==now_date()[0] && format_time(Object.values(Object.values(data)[i])[j].end_time)>now_date()[1]){
+						pList_str += `<td><button type="button" class="ret" data-url="${res_data}" onclick='replay(this)' disabled='disabled'>回放</button></td>`
+					}
+					else{
+						pList_str += `<td><button type="button" class="ret" data-url="${res_data}" onclick='replay(this)'>回放</button></td>`
+					}
+					
+					pList_str += `</tr>`  // 结束表格行
+				}
+				pList_str += '</table>'  // 结束表格
+			}
+		}
+		
+		fieldset[1].innerHTML = pList_str  // 更新节目单显示
+	}
+
+	// 监听按键事件，根据按键值执行相应操作
+	document.addEventListener('keydown', function(event) {
+		if (event.key == 'ArrowRight') {  
+			now_area[2].currentTime = now_area[2].currentTime + 15
+		}
+		else if (event.key == 'ArrowLeft') {
+			now_area[2].currentTime = now_area[2].currentTime - 15
+		}
+	})
+</script>
+</html>
