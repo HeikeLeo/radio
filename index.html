@@ -288,6 +288,15 @@
 		now_area[2].src=t.dataset.url  // 设置音频源为回放地址
 		now_area[2].play()  // 播放音频
 	}
+
+	// 下载节目
+	function download(t){
+		const a = document.createElement('a');
+		a.href = t.dataset.url;
+		document.body.appendChild(a);
+		a.click();
+		a.remove();
+	}
 </script>
 
 <script>
@@ -473,6 +482,19 @@
 					}
 					else{
 						pList_str += `<td><button type="button" class="ret" data-url="${res_data}" onclick='replay(this)'>回放</button></td>`
+					}
+
+					// 下载按钮
+					const download_data = `https://lcache.qtfm.cn/cache/${get_date(format_week(Object.values(Object.values(data)[i])[j].day))}/${Object.values(Object.values(data)[i])[j].channel_id}/${Object.values(Object.values(data)[i])[j].channel_id}_${get_date(format_week(Object.values(Object.values(data)[i])[j].day))}_${format_time(Object.values(Object.values(data)[i])[j].start_time)}_${format_time(Object.values(Object.values(data)[i])[j].end_time)}_24_0.aac`
+
+					if(get_date(format_week(Object.values(Object.values(data)[i])[j].day))>now_date()[0]){//日期：20260520《20260521时间：170000《184347
+						pList_str += `<td><button type="button" class="ret" data-url="${download_data}" onclick='download(this)' disabled='disabled'>下载</button></td>`
+					}
+					else if(get_date(format_week(Object.values(Object.values(data)[i])[j].day))==now_date()[0] && format_time(Object.values(Object.values(data)[i])[j].end_time)>now_date()[1]){
+						pList_str += `<td><button type="button" class="ret" data-url="${download_data}" onclick='download(this)' disabled='disabled'>下载</button></td>`
+					}
+					else{
+						pList_str += `<td><button type="button" class="ret" data-url="${download_data}" onclick='download(this)'>下载</button></td>`
 					}
 					
 					pList_str += `</tr>`  // 结束表格行
